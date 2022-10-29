@@ -1,0 +1,65 @@
+// Project build script (for Gradle).
+buildscript {
+    ext {
+    }
+}
+
+plugins {
+    id 'org.springframework.boot' version '3.0.0-M4'
+    id 'io.spring.dependency-management' version '1.0.13.RELEASE'
+    id 'java'
+}
+
+group = 'dsk'
+version = '1.0'
+sourceCompatibility = '17'
+def minJavaVersion = 17
+def minGradleVersion = 7.0
+
+repositories {
+    mavenCentral()
+    maven { url 'https://repo.spring.io/milestone' }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    runtimeOnly 'org.springframework:spring-tx'
+
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webflux'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+task checkEnv {
+    description = 'Check the build pre-conditions.'
+
+    // Check the Java version.
+    def javaVersion = System.getProperty('java.version')
+    if (versionToNumber(javaVersion) < versionToNumber(minJavaVersion)) {
+        throw new GradleException("Inappropriate Java version ($javaVersion). " +
+                "Needs ($minJavaVersion) or higher.")
+    }
+
+    // Check the Gradle version.
+    def gradleVersion = gradle.gradleVersion
+    if (versionToNumber(gradleVersion) < versionToNumber(minGradleVersion)) {
+        throw new GradleException("Inappropriate Gradle version ($gradleVersion). " +
+                "Needs ($minGradleVersion) or higher.")
+    }
+}
+
+def versionToNumber(versionString) {
+    def p = (versionString =~ /^(\d+)\.?(\d+)?\.?(\d+)?/)[0]
+    def version = ((p[1]?:0).toInteger() * 100 + (p[2]?:0).toInteger() * 10 + (p[3]?:0).toInteger())
+    return version
+}
+
+build.dependsOn ':checkEnv'
